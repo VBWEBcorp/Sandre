@@ -1,36 +1,36 @@
 import type { Metadata } from 'next'
 
-import { ContactContent } from './contact-content'
+import { RseContent } from './rse-content'
 import { breadcrumbJsonLd, webPageJsonLd } from '@/components/seo/json-ld'
 
 const description =
-  "Parlons de votre projet de vitrail : création contemporaine, restauration ou commande sur-mesure. Atelier à Rennes, réponse sous 48 h."
+  "L'engagement de l'atelier Énergie des Couleurs : économie durable, transmission du savoir, réduction des émissions CO₂, et les partenaires qui nous accompagnent."
 
 export const metadata: Metadata = {
-  title: 'Contact',
+  title: 'RSE & Partenaires',
   description,
-  alternates: { canonical: '/contact' },
+  alternates: { canonical: '/rse' },
 }
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
-    webPageJsonLd('Contact', description, '/contact'),
+    webPageJsonLd('RSE & Partenaires', description, '/rse'),
     breadcrumbJsonLd([
       { name: 'Accueil', path: '/' },
-      { name: 'Contact', path: '/contact' },
+      { name: 'RSE & Partenaires', path: '/rse' },
     ]),
   ],
 }
 
-export default function ContactPage() {
+export default function RsePage() {
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ContactContent />
+      <RseContent />
     </>
   )
 }

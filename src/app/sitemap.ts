@@ -1,78 +1,28 @@
 import type { MetadataRoute } from 'next'
 
+import { blogPosts } from '@/lib/blog-posts'
 import { siteConfig } from '@/lib/seo'
-import { connectDB } from '@/lib/db'
-import { BlogPost, BlogSettings } from '@/models/Blog'
-import { GallerySettings } from '@/models/Gallery'
 
 const baseUrl = siteConfig.url
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const pages: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/a-propos`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/services`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/contact`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-  ]
+export default function sitemap(): MetadataRoute.Sitemap {
+  const staticPages: MetadataRoute.Sitemap = [
+    { url: baseUrl, changeFrequency: 'weekly', priority: 1 },
+    { url: `${baseUrl}/a-propos`, changeFrequency: 'monthly', priority: 0.85 },
+    { url: `${baseUrl}/services`, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/gallery`, changeFrequency: 'weekly', priority: 0.85 },
+    { url: `${baseUrl}/temoignages`, changeFrequency: 'monthly', priority: 0.75 },
+    { url: `${baseUrl}/rse`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${baseUrl}/blog`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${baseUrl}/contact`, changeFrequency: 'monthly', priority: 0.8 },
+  ].map((p) => ({ ...p, lastModified: new Date() }))
 
-  try {
-    await connectDB()
+  const postPages: MetadataRoute.Sitemap = blogPosts.map((p) => ({
+    url: `${baseUrl}/blog/${p.slug}`,
+    lastModified: new Date(p.isoDate),
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }))
 
-    // Gallery page if enabled
-    const gallerySettings = await GallerySettings.findOne()
-    if (gallerySettings?.enabled) {
-      pages.push({
-        url: `${baseUrl}/gallery`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly',
-        priority: 0.7,
-      })
-    }
-
-    // Blog pages if enabled
-    const blogSettings = await BlogSettings.findOne()
-    if (blogSettings?.enabled) {
-      pages.push({
-        url: `${baseUrl}/blog`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly',
-        priority: 0.8,
-      })
-
-      // Individual blog posts
-      const posts = await BlogPost.find({ published: true }).select('slug updatedAt publishedAt')
-      for (const post of posts) {
-        pages.push({
-          url: `${baseUrl}/blog/${post.slug}`,
-          lastModified: new Date(post.updatedAt || post.publishedAt),
-          changeFrequency: 'weekly',
-          priority: 0.7,
-        })
-      }
-    }
-  } catch (error) {
-    console.error('Sitemap generation error:', error)
-  }
-
-  return pages
+  return [...staticPages, ...postPages]
 }

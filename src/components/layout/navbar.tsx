@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Logo } from '@/components/layout/logo'
 import { ThemeToggle } from '@/components/theme/theme-toggle'
@@ -16,81 +16,80 @@ interface NavLink {
   label: string
 }
 
-const staticLinks: NavLink[] = [
+const links: NavLink[] = [
   { to: '/', label: 'Accueil' },
-  { to: '/a-propos', label: 'À propos' },
-  { to: '/services', label: 'Services' },
+  { to: '/a-propos', label: "L'Artisan" },
+  { to: '/services', label: 'Les Prestations' },
+  { to: '/gallery', label: 'Les Réalisations' },
+  { to: '/temoignages', label: 'Témoignages' },
+  { to: '/rse', label: 'RSE & Partenaires' },
+  { to: '/blog', label: 'Blog' },
   { to: '/contact', label: 'Contact' },
 ]
 
 export function Navbar() {
   const [open, setOpen] = useState(false)
-  const [links, setLinks] = useState<NavLink[]>(staticLinks)
+  const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
 
-  // Vérifier si la galerie et le blog sont activés
   useEffect(() => {
-    const checkFeatures = async () => {
-      try {
-        const [galleryRes, blogRes] = await Promise.all([
-          fetch('/api/gallery/settings'),
-          fetch('/api/blog/settings'),
-        ])
-        const gallery = await galleryRes.json()
-        const blog = await blogRes.json()
-
-        const dynamicLinks: NavLink[] = [
-          { to: '/', label: 'Accueil' },
-          { to: '/a-propos', label: 'À propos' },
-          { to: '/services', label: 'Services' },
-        ]
-
-        if (gallery.enabled) dynamicLinks.push({ to: '/gallery', label: 'Galerie' })
-        if (blog.enabled) dynamicLinks.push({ to: '/blog', label: 'Blog' })
-
-        dynamicLinks.push({ to: '/contact', label: 'Contact' })
-        setLinks(dynamicLinks)
-      } catch (error) {
-        console.error('Failed to check features:', error)
-      }
-    }
-
-    checkFeatures()
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/70 bg-background/75 backdrop-blur-xl supports-[backdrop-filter]:bg-background/55">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
+    <header
+      className={cn(
+        'sticky top-0 z-50 transition-colors duration-300',
+        scrolled
+          ? 'border-b border-border/60 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70'
+          : 'border-b border-transparent bg-background/0'
+      )}
+    >
+      <div className="mx-auto flex min-h-[72px] max-w-7xl items-center justify-between gap-6 px-4 py-3 sm:px-6 lg:px-10">
         <Logo />
 
         <nav
-          className="hidden items-center gap-1 md:flex"
+          className="hidden items-center gap-0.5 lg:flex"
           aria-label="Navigation principale"
         >
-          {links.map((l) => (
-            <Link
-              key={l.to}
-              href={l.to}
-              className={cn(
-                'rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60',
-                pathname === l.to
-                  ? 'text-foreground'
-                  : 'text-muted-foreground'
-              )}
-            >
-              {l.label}
-            </Link>
-          ))}
+          {links.map((l) => {
+            const isActive =
+              l.to === '/' ? pathname === '/' : pathname?.startsWith(l.to)
+            return (
+              <Link
+                key={l.to}
+                href={l.to}
+                className={cn(
+                  'relative rounded-full px-3.5 py-2 font-display text-[13.5px] tracking-[0.01em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60',
+                  isActive
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {l.label}
+                {isActive ? (
+                  <motion.span
+                    layoutId="nav-active"
+                    className="absolute inset-x-3 -bottom-0.5 h-px bg-gradient-to-r from-transparent via-gold to-transparent"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                ) : null}
+              </Link>
+            )
+          })}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-3 lg:flex">
           <ThemeToggle />
-          <Button size="sm" asChild>
-            <Link href="/contact">Nous contacter</Link>
+          <Button size="sm" asChild className="group">
+            <Link href="/contact">Demander un devis</Link>
           </Button>
         </div>
 
-        <div className="flex items-center gap-1 md:hidden">
+        <div className="flex items-center gap-1 lg:hidden">
           <ThemeToggle />
           <Button
             type="button"
@@ -115,28 +114,30 @@ export function Navbar() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="border-t border-border/70 bg-background/95 backdrop-blur-xl md:hidden"
+            className="border-t border-border/60 bg-background/97 backdrop-blur-xl lg:hidden"
           >
-            <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-4 sm:px-6">
-              {links.map((l) => (
-                <Link
-                  key={l.to}
-                  href={l.to}
-                  className={cn(
-                    'rounded-xl px-3 py-3 text-base font-medium transition-colors hover:bg-muted',
-                    pathname === l.to
-                      ? 'text-foreground'
-                      : 'text-muted-foreground'
-                  )}
-                  onClick={() => setOpen(false)}
-                >
-                  {l.label}
-                </Link>
-              ))}
+            <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4 sm:px-6">
+              {links.map((l) => {
+                const isActive =
+                  l.to === '/' ? pathname === '/' : pathname?.startsWith(l.to)
+                return (
+                  <Link
+                    key={l.to}
+                    href={l.to}
+                    className={cn(
+                      'rounded-xl px-3 py-3 font-display text-[16px] transition-colors hover:bg-muted',
+                      isActive ? 'text-primary' : 'text-muted-foreground'
+                    )}
+                    onClick={() => setOpen(false)}
+                  >
+                    {l.label}
+                  </Link>
+                )
+              })}
               <div className="mt-2 border-t border-border/60 pt-4">
                 <Button className="w-full" asChild>
                   <Link href="/contact" onClick={() => setOpen(false)}>
-                    Nous contacter
+                    Demander un devis
                   </Link>
                 </Button>
               </div>

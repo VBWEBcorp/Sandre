@@ -3,6 +3,8 @@ import type { Metadata } from 'next'
 import { CtaSection } from '@/components/sections/cta-section'
 import { GalleryCarousel } from '@/components/sections/gallery-carousel'
 import { HeroSection } from '@/components/sections/hero-section'
+import { LatestPosts } from '@/components/sections/latest-posts'
+import { QuoteSection } from '@/components/sections/quote-section'
 import { ServicesPreview } from '@/components/sections/services-preview'
 import { StorySection } from '@/components/sections/story-section'
 import { TestimonialsSection } from '@/components/sections/testimonials-section'
@@ -37,12 +39,14 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <HeroSection />
-      <ServicesPreview />
-      <StorySection />
-      <TestimonialsSection />
-      <GalleryCarousel />
-      <CtaSection />
       <ValuesMarquee />
+      <StorySection />
+      <ServicesPreview />
+      <GalleryCarousel />
+      <QuoteSection />
+      <TestimonialsSection />
+      <LatestPosts />
+      <CtaSection />
     </>
   )
 }

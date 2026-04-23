@@ -1,295 +1,233 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowRight, CalendarDays, Clock, Search, Sparkles } from 'lucide-react'
 import Link from 'next/link'
-import { ArrowRight, Calendar, User, Search } from 'lucide-react'
+import { useMemo, useState } from 'react'
 
-interface BlogPost {
-  _id: string
-  title: string
-  slug: string
-  excerpt: string
-  coverImage: string
-  category: string
-  tags: string[]
-  author: string
-  publishedAt: string
-}
-
-interface BlogSettings {
-  enabled: boolean
-  title: string
-  description?: string
-  eyebrow?: string
-  heroImage?: string
-  categories?: string[]
-}
+import { PageHero } from '@/components/sections/page-hero'
+import { blogCategories, blogPosts, type BlogCategory } from '@/lib/blog-posts'
 
 const ease = [0.22, 1, 0.36, 1] as const
 
-export default function BlogPageContent() {
-  const [settings, setSettings] = useState<BlogSettings | null>(null)
-  const [posts, setPosts] = useState<BlogPost[]>([])
-  const [loading, setLoading] = useState(true)
-  const [activeCategory, setActiveCategory] = useState<string>('all')
+type Filter = 'Tous' | BlogCategory
 
-  useEffect(() => {
-    const fetchBlog = async () => {
-      try {
-        const [settingsRes, postsRes] = await Promise.all([
-          fetch('/api/blog/settings'),
-          fetch('/api/blog/posts'),
-        ])
-        setSettings(await settingsRes.json())
-        setPosts(await postsRes.json())
-      } catch (error) {
-        console.error('Failed to load blog:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchBlog()
+const hero = {
+  eyebrow: 'Journal',
+  title: "Le carnet de l'atelier",
+  description:
+    "Événements, gestes, anecdotes, styles de vitraux, ce qui se raconte quand je quitte la table lumineuse.",
+  image:
+    'https://i.ibb.co/zhSGv7y9/Chemin-de-Lumiere-de-nuit-1-scaled.webp',
+}
+
+export default function BlogPageContent() {
+  const [active, setActive] = useState<Filter>('Tous')
+
+  const filters = useMemo<Filter[]>(() => {
+    return ['Tous', ...blogCategories]
   }, [])
 
-  const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    })
+  const filtered = useMemo(() => {
+    if (active === 'Tous') return blogPosts
+    return blogPosts.filter((p) => p.category === active)
+  }, [active])
 
-  const filteredPosts = activeCategory === 'all'
-    ? posts
-    : posts.filter((p) => p.category === activeCategory)
+  const featured = filtered[0]
+  const rest = filtered.slice(1)
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-muted-foreground">Chargement...</div>
-      </div>
-    )
-  }
-
-  if (!settings?.enabled) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Le blog n&apos;est pas disponible pour le moment.</p>
-      </div>
-    )
-  }
+  const countFor = (f: Filter) =>
+    f === 'Tous'
+      ? blogPosts.length
+      : blogPosts.filter((p) => p.category === f).length
 
   return (
     <div className="min-h-screen">
-      {/* Hero */}
-      <section className="relative overflow-hidden min-h-[340px] sm:min-h-[400px] lg:min-h-[440px] flex items-center">
-        {/* Background image */}
-        <div className="absolute inset-0">
-          {settings.heroImage ? (
-            <img
-              src={settings.heroImage}
-              alt=""
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-background" />
-          )}
-        </div>
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+      <PageHero
+        eyebrow={hero.eyebrow}
+        title={hero.title}
+        description={hero.description}
+        image={hero.image}
+        breadcrumb="Blog"
+      />
 
-        <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28 w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease }}
-            className="text-center max-w-3xl mx-auto"
-          >
-            <p className="font-display text-xs font-semibold tracking-[0.22em] text-white/70 uppercase mb-4">
-              {settings.eyebrow || 'Blog'}
-            </p>
-            <h1 className="font-display text-4xl tracking-tight text-white sm:text-5xl lg:text-6xl font-bold">
-              {settings.title || 'Nos dernières actualités'}
-            </h1>
-            <p className="mt-5 text-lg text-white/70 leading-relaxed sm:text-xl max-w-2xl mx-auto">
-              {settings.description || 'Retrouvez nos conseils, nos projets récents et les tendances du secteur.'}
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      {/* Filtres sticky, style éditorial */}
+      <div className="sticky top-[72px] z-30 border-b border-border/60 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
+          <div className="flex items-center gap-6 overflow-x-auto py-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <span className="hidden shrink-0 items-center gap-2 font-display text-[11px] tracking-[0.28em] uppercase text-muted-foreground sm:inline-flex">
+              <Sparkles className="size-3 text-gold" aria-hidden />
+              Rubriques
+            </span>
+            <div className="hidden h-4 w-px shrink-0 bg-border sm:block" />
 
-      {/* Category filters */}
-      {(settings.categories?.length ?? 0) > 0 && (
-        <div className="border-b border-border/60 bg-background/50 backdrop-blur-sm sticky top-16 z-30">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-1 py-3 overflow-x-auto scrollbar-hide">
-              <button
-                onClick={() => setActiveCategory('all')}
-                className={`shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  activeCategory === 'all'
-                    ? 'bg-primary text-white'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                }`}
-              >
-                Tous
-              </button>
-              {settings.categories?.map((cat) => (
+            {filters.map((f) => {
+              const isActive = active === f
+              const count = countFor(f)
+              const disabled = f !== 'Tous' && count === 0
+
+              return (
                 <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    activeCategory === cat
-                      ? 'bg-primary text-white'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  key={f}
+                  onClick={() => !disabled && setActive(f)}
+                  disabled={disabled}
+                  className={`group relative shrink-0 pb-2 font-display text-[13.5px] tracking-[-0.005em] transition-colors duration-300 ${
+                    isActive
+                      ? 'text-foreground'
+                      : disabled
+                      ? 'cursor-not-allowed text-muted-foreground/35'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {cat}
+                  <span className="relative inline-flex items-baseline gap-1.5">
+                    <span>{f}</span>
+                    <span
+                      className={`font-sans text-[10px] tabular-nums transition-colors ${
+                        isActive
+                          ? 'text-gold'
+                          : 'text-muted-foreground/60 group-hover:text-muted-foreground'
+                      }`}
+                    >
+                      {count.toString().padStart(2, '0')}
+                    </span>
+                  </span>
+                  {isActive && (
+                    <motion.span
+                      layoutId="blog-filter-underline"
+                      aria-hidden
+                      className="absolute inset-x-0 -bottom-px h-[2px] rounded-full bg-gradient-to-r from-transparent via-gold to-transparent"
+                      transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                    />
+                  )}
                 </button>
-              ))}
-            </div>
+              )
+            })}
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Posts grid */}
-      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-        {/* Featured post (first one, if has cover) */}
-        {filteredPosts.length > 0 && filteredPosts[0].coverImage && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease }}
-            className="mb-12"
-          >
-            <Link href={`/blog/${filteredPosts[0].slug}`} className="group block">
-              <div className="grid md:grid-cols-2 gap-6 rounded-2xl border border-border/50 bg-card overflow-hidden hover:shadow-lg hover:border-primary/20 transition-all">
-                <div className="aspect-[16/10] md:aspect-auto overflow-hidden bg-muted">
-                  <img
-                    src={filteredPosts[0].coverImage}
-                    alt={filteredPosts[0].title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-6 md:p-8 flex flex-col justify-center space-y-4">
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    {filteredPosts[0].category && (
-                      <span className="font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                        {filteredPosts[0].category}
-                      </span>
-                    )}
-                    {filteredPosts[0].publishedAt && (
-                      <span className="flex items-center gap-1">
-                        <Calendar className="size-3" />
-                        {formatDate(filteredPosts[0].publishedAt)}
-                      </span>
-                    )}
-                  </div>
-                  <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground leading-tight group-hover:text-primary transition-colors">
-                    {filteredPosts[0].title}
-                  </h2>
-                  {filteredPosts[0].excerpt && (
-                    <p className="text-muted-foreground leading-relaxed line-clamp-3">
-                      {filteredPosts[0].excerpt}
-                    </p>
-                  )}
-                  <div className="flex items-center justify-between pt-2">
-                    {filteredPosts[0].author && (
-                      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <User className="size-3.5" />
-                        {filteredPosts[0].author}
-                      </span>
-                    )}
-                    <span className="flex items-center gap-1.5 text-sm font-medium text-primary group-hover:gap-2.5 transition-all">
-                      Lire l&apos;article
-                      <ArrowRight className="size-4" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </motion.div>
-        )}
-
-        {/* Rest of posts */}
-        {filteredPosts.length > 1 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredPosts.slice(1).map((post, i) => (
-              <motion.article
-                key={post._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease, delay: i * 0.06 }}
-              >
-                <Link href={`/blog/${post.slug}`} className="group block h-full">
-                  <div className="h-full rounded-2xl border border-border/50 bg-card overflow-hidden transition-all hover:shadow-lg hover:border-primary/20">
-                    {post.coverImage && (
-                      <div className="aspect-[16/9] overflow-hidden bg-muted">
-                        <img
-                          src={post.coverImage}
-                          alt={post.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </div>
-                    )}
-
-                    <div className="p-6 space-y-3">
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        {post.category && (
-                          <span className="font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                            {post.category}
-                          </span>
-                        )}
-                        {post.publishedAt && (
-                          <span className="flex items-center gap-1">
-                            <Calendar className="size-3" />
-                            {formatDate(post.publishedAt)}
-                          </span>
-                        )}
-                      </div>
-
-                      <h2 className="font-display text-lg font-semibold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
-                        {post.title}
-                      </h2>
-
-                      {post.excerpt && (
-                        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                          {post.excerpt}
-                        </p>
-                      )}
-
-                      <div className="flex items-center justify-between pt-2">
-                        {post.author && (
-                          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <User className="size-3" />
-                            {post.author}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1 text-xs font-medium text-primary group-hover:gap-2 transition-all">
-                          Lire la suite
-                          <ArrowRight className="size-3" />
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+        <AnimatePresence mode="popLayout">
+          {filtered.length === 0 ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="mx-auto max-w-xl rounded-3xl border border-dashed border-border/80 bg-card/60 p-12 text-center"
+            >
+              <Search className="mx-auto mb-4 size-8 text-muted-foreground/60" />
+              <p className="font-display text-xl text-foreground">
+                Pas d&apos;article dans cette catégorie, pour l&apos;instant.
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Revenez bientôt, le carnet s&apos;enrichit chaque mois.
+              </p>
+            </motion.div>
+          ) : (
+            <>
+              {featured && (
+                <motion.article
+                  layout
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, ease }}
+                  className="mb-12"
+                >
+                  <Link
+                    href={`/blog/${featured.slug}`}
+                    className="group grid gap-0 overflow-hidden rounded-3xl border border-border/70 bg-card shadow-[var(--shadow-sm)] ring-1 ring-foreground/5 transition-all duration-500 hover:shadow-[var(--shadow-md)] md:grid-cols-2"
+                  >
+                    <div className="aspect-[16/11] overflow-hidden md:aspect-auto">
+                      <img
+                        src={featured.image}
+                        alt={featured.title}
+                        className="h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.04]"
+                      />
+                    </div>
+                    <div className="flex flex-col justify-center gap-5 p-8 sm:p-12">
+                      <div className="flex items-center gap-3 text-[12px]">
+                        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 font-display tracking-[0.14em] uppercase text-primary">
+                          {featured.category}
+                        </span>
+                        <span className="font-display text-muted-foreground">
+                          À la une
                         </span>
                       </div>
+                      <h2 className="font-display text-[1.8rem] font-light leading-[1.1] tracking-tight text-foreground sm:text-[2.2rem]">
+                        {featured.title}
+                      </h2>
+                      <p className="text-[15px] leading-relaxed text-muted-foreground">
+                        {featured.excerpt}
+                      </p>
+                      <div className="flex items-center gap-4 text-[12.5px] text-muted-foreground">
+                        <span className="inline-flex items-center gap-1.5">
+                          <CalendarDays className="size-3.5 text-gold" />
+                          {featured.date}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <Clock className="size-3.5 text-gold" />
+                          {featured.readMin} min de lecture
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 font-display text-[14px] text-primary transition-colors group-hover:text-gold">
+                        Lire l&apos;article
+                        <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                      </span>
                     </div>
-                  </div>
-                </Link>
-              </motion.article>
-            ))}
-          </div>
-        ) : filteredPosts.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-20"
-          >
-            <Search className="size-12 text-muted-foreground/20 mx-auto mb-4" />
-            <p className="text-muted-foreground text-lg font-medium">
-              {activeCategory !== 'all'
-                ? `Aucun article dans la catégorie "${activeCategory}"`
-                : 'Aucun article pour le moment.'}
-            </p>
-            <p className="text-sm text-muted-foreground/60 mt-2">Revenez bientôt !</p>
-          </motion.div>
-        ) : null}
+                  </Link>
+                </motion.article>
+              )}
+
+              <motion.div layout className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {rest.map((p, i) => (
+                  <motion.article
+                    key={p.slug}
+                    layout
+                    initial={{ opacity: 0, y: 18, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.97 }}
+                    transition={{ duration: 0.45, ease, delay: i * 0.05 }}
+                  >
+                    <Link
+                      href={`/blog/${p.slug}`}
+                      className="group block h-full overflow-hidden rounded-3xl border border-border/70 bg-card shadow-[var(--shadow-sm)] ring-1 ring-foreground/5 transition-all duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-md)]"
+                    >
+                      <div className="aspect-[16/10] overflow-hidden">
+                        <img
+                          src={p.image}
+                          alt={p.title}
+                          className="h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.05]"
+                        />
+                      </div>
+                      <div className="space-y-4 p-6">
+                        <p className="font-display text-[11px] tracking-[0.2em] uppercase text-primary">
+                          {p.category}
+                        </p>
+                        <h3 className="font-display text-[1.2rem] font-medium leading-snug tracking-tight text-foreground">
+                          {p.title}
+                        </h3>
+                        <p className="text-[13.5px] leading-relaxed text-muted-foreground line-clamp-3">
+                          {p.excerpt}
+                        </p>
+                        <div className="flex items-center gap-3 border-t border-border/60 pt-4 text-[11.5px] text-muted-foreground">
+                          <span className="inline-flex items-center gap-1">
+                            <CalendarDays className="size-3 text-gold" />
+                            {p.date}
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <Clock className="size-3 text-gold" />
+                            {p.readMin} min
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.article>
+                ))}
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </section>
     </div>
   )

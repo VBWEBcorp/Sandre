@@ -1,290 +1,141 @@
 'use client'
 
-import { useEffect, useState, use } from 'react'
 import { motion } from 'framer-motion'
+import { ArrowLeft, ArrowRight, CalendarDays, Clock, User } from 'lucide-react'
 import Link from 'next/link'
-import { ArrowLeft, Calendar, User, Tag, Clock } from 'lucide-react'
 
-interface BlogPost {
-  _id: string
-  title: string
-  slug: string
-  excerpt: string
-  content: string
-  coverImage: string
-  category: string
-  tags: string[]
-  author: string
-  published: boolean
-  publishedAt: string
-  metaTitle?: string
-  metaDescription?: string
-}
+import { blogPosts, type BlogPost } from '@/lib/blog-posts'
 
 const ease = [0.22, 1, 0.36, 1] as const
 
-function estimateReadTime(html: string) {
-  const text = html.replace(/<[^>]*>/g, '')
-  const words = text.trim().split(/\s+/).length
-  return Math.max(1, Math.ceil(words / 200))
-}
-
-export default function BlogPostContent({ slug }: { slug: string }) {
-  const [post, setPost] = useState<BlogPost | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [notFound, setNotFound] = useState(false)
-
-  useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const response = await fetch(`/api/blog/posts/${slug}`)
-        if (!response.ok) {
-          setNotFound(true)
-          return
-        }
-        const data = await response.json()
-        if (!data.published) {
-          setNotFound(true)
-          return
-        }
-        setPost(data)
-      } catch {
-        setNotFound(true)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchPost()
-  }, [slug])
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-muted-foreground">Chargement...</div>
-      </div>
-    )
-  }
-
-  if (notFound || !post) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-muted-foreground text-lg">Article introuvable.</p>
-        <Link href="/blog" className="text-primary underline underline-offset-4 hover:text-primary/80 text-sm">
-          Retour au blog
-        </Link>
-      </div>
-    )
-  }
-
-  const readTime = estimateReadTime(post.content)
-  const formattedDate = new Date(post.publishedAt).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
+export default function BlogPostContent({ post }: { post: BlogPost }) {
+  const related = blogPosts.filter((p) => p.slug !== post.slug).slice(0, 3)
 
   return (
     <article className="min-h-screen">
-      {/* Cover image */}
-      {post.coverImage && (
-        <div className="relative w-full h-[300px] sm:h-[400px] lg:h-[480px] overflow-hidden bg-muted">
+      {/* Hero */}
+      <section className="relative isolate overflow-hidden border-b border-border/60">
+        <div className="absolute inset-0" aria-hidden>
           <img
-            src={post.coverImage}
-            alt={post.title}
-            className="w-full h-full object-cover"
+            src={post.image}
+            alt=""
+            className="h-full w-full object-cover animate-slow-pan"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-[oklch(0.14_0.03_150/0.7)]" />
         </div>
-      )}
 
-      {/* Content */}
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease }}
-          className={post.coverImage ? '-mt-20 relative z-10' : 'pt-16'}
-        >
-          {/* Back link */}
+        <div className="relative mx-auto max-w-4xl px-4 pt-14 pb-24 sm:px-6 lg:px-8 lg:pt-20 lg:pb-32">
           <Link
             href="/blog"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 font-display text-[12px] tracking-[0.08em] text-white/85 backdrop-blur-md transition-colors hover:bg-white/10"
           >
             <ArrowLeft className="size-3.5" />
-            Retour au blog
+            Retour au journal
           </Link>
-
-          {/* Header */}
-          <header className="space-y-4 mb-10">
-            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-              {post.category && (
-                <span className="font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full text-xs">
-                  {post.category}
-                </span>
-              )}
-              <span className="flex items-center gap-1.5">
-                <Calendar className="size-3.5" />
-                {formattedDate}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="size-3.5" />
-                {readTime} min de lecture
-              </span>
-              {post.author && (
-                <span className="flex items-center gap-1.5">
-                  <User className="size-3.5" />
-                  {post.author}
-                </span>
-              )}
-            </div>
-
-            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease }}
+            className="mt-8 text-center"
+          >
+            <p className="font-display text-[11px] tracking-[0.3em] uppercase text-gold">
+              {post.category}
+            </p>
+            <h1 className="mt-5 font-display text-balance text-4xl font-light leading-[1.05] tracking-[-0.02em] text-white sm:text-5xl md:text-[3.25rem]">
               {post.title}
             </h1>
-
-            {post.excerpt && (
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                {post.excerpt}
-              </p>
-            )}
-          </header>
-
-          {/* Article body — rendered HTML from TipTap */}
-          <div
-            className="blog-content pb-16"
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
-
-          {/* Tags */}
-          {post.tags?.length > 0 && (
-            <div className="border-t border-border/60 py-8 flex flex-wrap items-center gap-2">
-              <Tag className="size-4 text-muted-foreground" />
-              {post.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs font-medium text-muted-foreground bg-muted px-3 py-1 rounded-full"
-                >
-                  {tag}
-                </span>
-              ))}
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-4 text-[13px] text-white/70">
+              <span className="inline-flex items-center gap-1.5">
+                <User className="size-3.5 text-gold" />
+                {post.author}
+              </span>
+              <span aria-hidden className="text-white/30">·</span>
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays className="size-3.5 text-gold" />
+                {post.date}
+              </span>
+              <span aria-hidden className="text-white/30">·</span>
+              <span className="inline-flex items-center gap-1.5">
+                <Clock className="size-3.5 text-gold" />
+                {post.readMin} min de lecture
+              </span>
             </div>
-          )}
+          </motion.div>
+        </div>
+      </section>
 
-          {/* CTA bottom */}
-          <div className="border-t border-border/60 py-12 text-center space-y-4">
-            <p className="text-lg font-semibold text-foreground">Cet article vous a plu ?</p>
-            <p className="text-sm text-muted-foreground">
-              Découvrez nos autres articles ou contactez-nous pour discuter de votre projet.
-            </p>
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <Link
-                href="/blog"
-                className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-              >
-                Tous les articles
-              </Link>
-              <Link
-                href="/contact"
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
-              >
-                Nous contacter
-              </Link>
-            </div>
-          </div>
+      <section className="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease }}
+          className="space-y-7"
+        >
+          <p className="font-display text-[1.15rem] italic leading-relaxed text-foreground/85">
+            {post.excerpt}
+          </p>
+          <p className="text-[16px] leading-[1.75] text-foreground/85">
+            Cet article est ici présenté comme démonstration. Dans sa version
+            finale, il accueillerait un texte long richement illustré, des
+            citations, des photos des étapes de création et des renvois vers
+            d&apos;autres articles du carnet.
+          </p>
+          <blockquote className="border-l-2 border-gold/70 bg-muted/30 px-6 py-5 font-display text-[1.2rem] italic leading-relaxed text-foreground">
+            « Une démo éditoriale n&apos;a de sens que si le contenu qu&apos;elle
+            promet peut y prendre place sans rupture, le jour où il sera écrit. »
+          </blockquote>
+          <p className="text-[16px] leading-[1.75] text-foreground/85">
+            Chaque billet est l&apos;occasion d&apos;ouvrir une porte : sur un
+            chantier en cours, sur un geste technique rare, sur une rencontre
+            des Journées Européennes des Métiers d&apos;Art, ou sur une
+            anecdote amusante tirée de la vie de l&apos;atelier.
+          </p>
         </motion.div>
-      </div>
+      </section>
 
-      {/* Blog content styles */}
-      <style jsx global>{`
-        .blog-content {
-          font-size: 0.9375rem;
-          line-height: 1.8;
-          color: var(--muted-foreground);
-        }
-        .blog-content h2 {
-          font-size: 1.5rem;
-          font-weight: 700;
-          margin-top: 2.5rem;
-          margin-bottom: 0.75rem;
-          color: var(--foreground);
-          font-family: var(--font-display);
-          line-height: 1.3;
-        }
-        .blog-content h3 {
-          font-size: 1.2rem;
-          font-weight: 600;
-          margin-top: 2rem;
-          margin-bottom: 0.5rem;
-          color: var(--foreground);
-          font-family: var(--font-display);
-          line-height: 1.4;
-        }
-        .blog-content p {
-          margin-bottom: 1.25rem;
-        }
-        .blog-content strong {
-          font-weight: 600;
-          color: var(--foreground);
-        }
-        .blog-content em {
-          font-style: italic;
-        }
-        .blog-content a {
-          color: hsl(var(--primary));
-          text-decoration: underline;
-          text-underline-offset: 4px;
-        }
-        .blog-content a:hover {
-          opacity: 0.8;
-        }
-        .blog-content ul,
-        .blog-content ol {
-          padding-left: 1.5rem;
-          margin-bottom: 1.25rem;
-        }
-        .blog-content ul { list-style: disc; }
-        .blog-content ol { list-style: decimal; }
-        .blog-content li {
-          margin-bottom: 0.4rem;
-        }
-        .blog-content blockquote {
-          border-left: 3px solid hsl(var(--primary));
-          padding: 0.75rem 1.25rem;
-          margin: 1.5rem 0;
-          font-style: italic;
-          background: var(--muted);
-          border-radius: 0 0.5rem 0.5rem 0;
-        }
-        .blog-content hr {
-          border: none;
-          border-top: 1px solid var(--border);
-          margin: 2rem 0;
-        }
-        .blog-content img {
-          border-radius: 0.75rem;
-          max-width: 100%;
-          height: auto;
-          margin: 1.5rem 0;
-        }
-        .blog-content pre {
-          background: var(--muted);
-          padding: 1rem;
-          border-radius: 0.5rem;
-          overflow-x: auto;
-          margin: 1.5rem 0;
-          font-size: 0.8125rem;
-        }
-        .blog-content code {
-          background: var(--muted);
-          padding: 0.15rem 0.4rem;
-          border-radius: 0.25rem;
-          font-size: 0.85em;
-        }
-        .blog-content pre code {
-          background: none;
-          padding: 0;
-        }
-      `}</style>
+      <section className="border-t border-border/60 bg-muted/15">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+          <p className="font-display text-[11px] font-medium tracking-[0.32em] text-primary uppercase">
+            À lire aussi
+          </p>
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            {related.map((r, i) => (
+              <motion.article
+                key={r.slug}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.5, ease, delay: i * 0.06 }}
+              >
+                <Link
+                  href={`/blog/${r.slug}`}
+                  className="group block overflow-hidden rounded-3xl border border-border/70 bg-card shadow-[var(--shadow-sm)] ring-1 ring-foreground/5 transition-all duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-md)]"
+                >
+                  <div className="aspect-[16/10] overflow-hidden">
+                    <img
+                      src={r.image}
+                      alt={r.title}
+                      className="h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.05]"
+                    />
+                  </div>
+                  <div className="space-y-3 p-6">
+                    <p className="font-display text-[11px] tracking-[0.2em] uppercase text-primary">
+                      {r.category}
+                    </p>
+                    <h3 className="font-display text-[1.1rem] font-medium leading-snug tracking-tight text-foreground">
+                      {r.title}
+                    </h3>
+                    <span className="inline-flex items-center gap-1.5 font-display text-[13px] text-primary transition-colors group-hover:text-gold">
+                      Lire
+                      <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                    </span>
+                  </div>
+                </Link>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </section>
     </article>
   )
 }

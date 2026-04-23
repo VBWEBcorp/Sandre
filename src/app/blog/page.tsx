@@ -1,92 +1,53 @@
 import type { Metadata } from 'next'
 
-import { connectDB } from '@/lib/db'
-import { BlogSettings, BlogPost } from '@/models/Blog'
-import { siteConfig } from '@/lib/seo'
 import BlogPageContent from './blog-page-content'
+import { breadcrumbJsonLd, webPageJsonLd } from '@/components/seo/json-ld'
+import { blogPosts } from '@/lib/blog-posts'
+import { siteConfig } from '@/lib/seo'
 
-export const revalidate = 3600
+const description =
+  "Carnets, chroniques et coulisses de l'atelier Énergie des Couleurs, évènements, savoir-faire, historiettes et styles de vitraux."
 
-export async function generateMetadata(): Promise<Metadata> {
-  try {
-    await connectDB()
-    const settings = await BlogSettings.findOne().lean() as any
-
-    const title = settings?.title || 'Blog'
-    const description = settings?.description || 'Découvrez nos articles, conseils et actualités.'
-
-    return {
-      title,
-      description,
-      openGraph: {
-        type: 'website',
-        title,
-        description,
-        url: `${siteConfig.url}/blog`,
-        siteName: siteConfig.name,
-        locale: siteConfig.locale,
-        images: settings?.heroImage ? [{ url: settings.heroImage }] : [],
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title,
-        description,
-        images: settings?.heroImage ? [settings.heroImage] : [],
-      },
-      alternates: {
-        canonical: '/blog',
-      },
-    }
-  } catch {
-    return { title: 'Blog' }
-  }
+export const metadata: Metadata = {
+  title: 'Blog',
+  description,
+  alternates: { canonical: '/blog' },
 }
 
-export default async function BlogPage() {
-  // Pre-fetch posts for JSON-LD CollectionPage structured data
-  let jsonLd = null
-  try {
-    await connectDB()
-    const settings = await BlogSettings.findOne().lean() as any
-    const posts = await BlogPost.find({ published: true })
-      .sort({ publishedAt: -1 })
-      .select('title slug excerpt coverImage publishedAt author')
-      .limit(20)
-      .lean() as any[]
-
-    jsonLd = {
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    webPageJsonLd('Blog', description, '/blog'),
+    breadcrumbJsonLd([
+      { name: 'Accueil', path: '/' },
+      { name: 'Blog', path: '/blog' },
+    ]),
+    {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: settings?.title || 'Blog',
-      description: settings?.description || 'Nos dernières actualités',
+      name: 'Blog',
+      description,
       url: `${siteConfig.url}/blog`,
-      publisher: {
-        '@type': 'Organization',
-        name: siteConfig.name,
-        url: siteConfig.url,
-      },
       mainEntity: {
         '@type': 'ItemList',
-        itemListElement: posts.map((post, i) => ({
+        itemListElement: blogPosts.map((p, i) => ({
           '@type': 'ListItem',
           position: i + 1,
-          url: `${siteConfig.url}/blog/${post.slug}`,
-          name: post.title,
+          url: `${siteConfig.url}/blog/${p.slug}`,
+          name: p.title,
         })),
       },
-    }
-  } catch {
-    // Silently fail
-  }
+    },
+  ],
+}
 
+export default function BlogPage() {
   return (
     <>
-      {jsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-      )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <BlogPageContent />
     </>
   )

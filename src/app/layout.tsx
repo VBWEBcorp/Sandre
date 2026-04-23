@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
+import { Fraunces, Inter } from 'next/font/google'
 
 import { RootWrapper } from '@/components/layout/root-wrapper'
 import { ThemeScript } from '@/components/theme/theme-script'
@@ -13,11 +13,12 @@ const inter = Inter({
   display: 'swap',
 })
 
-const jakarta = Plus_Jakarta_Sans({
+const fraunces = Fraunces({
   subsets: ['latin'],
   variable: '--font-display',
-  weight: ['500', '600', '700'],
+  style: ['normal', 'italic'],
   display: 'swap',
+  axes: ['SOFT'],
 })
 
 export const metadata: Metadata = {
@@ -72,7 +73,7 @@ export default function RootLayout({
     <html
       lang="fr"
       dir="ltr"
-      className={`${inter.variable} ${jakarta.variable}`}
+      className={`${inter.variable} ${fraunces.variable}`}
       suppressHydrationWarning
     >
       <head>

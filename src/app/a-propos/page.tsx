@@ -4,7 +4,7 @@ import { AboutContent } from './about-content'
 import { breadcrumbJsonLd, webPageJsonLd } from '@/components/seo/json-ld'
 
 const description =
-  'Découvrez notre histoire, nos valeurs et notre équipe. Nous accompagnons les entreprises dans leur développement digital.'
+  "Rencontrez l'atelier Énergie des Couleurs : un atelier de vitrail d'art à Rennes, vingt ans de création et de restauration, à la main."
 
 export const metadata: Metadata = {
   title: 'À propos',

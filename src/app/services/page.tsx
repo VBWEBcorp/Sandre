@@ -8,17 +8,15 @@ import {
 } from '@/components/seo/json-ld'
 
 const description =
-  'Création de site, SEO, identité visuelle, développement sur mesure : découvrez nos services pour développer votre activité en ligne.'
+  "Verrières d'intérieur, vitrail contemporain, restauration de patrimoine, peinture sur verre, fusing, Tiffany : tout le savoir-faire de l'atelier."
 
 const services = [
-  { title: 'Création de site vitrine', desc: 'Un site moderne, rapide et responsive qui présente clairement votre activité et inspire confiance à vos visiteurs.' },
-  { title: 'Application web', desc: 'Outils métier, plateformes de réservation, espaces clients : des applications pensées pour simplifier votre quotidien.' },
-  { title: 'Référencement naturel (SEO)', desc: 'Optimisation technique, contenu stratégique et suivi de positionnement pour gagner en visibilité sur Google.' },
-  { title: 'Identité visuelle', desc: 'Logo, charte graphique, supports de communication : une image cohérente qui vous ressemble.' },
-  { title: 'Communication digitale', desc: 'Stratégie de contenu, réseaux sociaux et campagnes pour développer votre audience en ligne.' },
-  { title: 'Développement sur mesure', desc: 'Intégrations, automatisations, API : des solutions techniques taillées pour vos besoins spécifiques.' },
-  { title: 'Maintenance & sécurité', desc: 'Mises à jour, sauvegardes, monitoring et corrections pour un site toujours performant et sécurisé.' },
-  { title: 'Analyse & reporting', desc: 'Tableaux de bord clairs pour suivre vos performances, comprendre vos visiteurs et ajuster votre stratégie.' },
+  { title: "Verrières d'intérieur", desc: "Cloisons vitrées, séparations de pièces, claustras sur-mesure pour faire entrer la lumière sans sacrifier l'intimité." },
+  { title: 'Vitraux contemporains', desc: 'Pièces uniques, figuratives ou abstraites, pensées comme des tableaux de lumière.' },
+  { title: 'Restauration de patrimoine', desc: "Reprise de vitraux anciens, haussmannien, Art Nouveau, Art Déco, liturgique, dans le respect des techniques d'origine." },
+  { title: 'Peinture sur verre', desc: 'Grisaille, jaune d\'argent, émaux cuits au four, pour portraits et motifs figuratifs.' },
+  { title: 'Fusing & thermoformage', desc: 'Fusion de verres colorés au four, bombages, sculptures plates pour pièces contemporaines.' },
+  { title: 'Tiffany & petites pièces', desc: 'Lampes, suspensions, objets décoratifs et bijoux au ruban de cuivre.' },
 ]
 
 export const metadata: Metadata = {
