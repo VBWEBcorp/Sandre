@@ -135,7 +135,7 @@ export function GalleryCarousel() {
                 <figcaption className="mt-5 flex items-start justify-between gap-3 px-1">
                   <div>
                     <p className="font-display text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                      {w.category}
+                      {w.categories[0]}
                     </p>
                     <p className="mt-1.5 font-display text-xl text-foreground">
                       {w.title}
